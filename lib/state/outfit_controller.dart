@@ -1,0 +1,77 @@
+import 'package:flutter/foundation.dart';
+
+import '../models/product.dart';
+import '../services/recommendation_service.dart';
+
+enum PlanMode { ai, manual }
+
+/// Menyimpan semua data yang dipakai lintas layar:
+/// mode, budget, acara, dan produk yang dipilih.
+/// Layar cukup mendengarkan controller ini (lihat ListenableBuilder).
+class OutfitController extends ChangeNotifier {
+  OutfitController({
+    required this.catalog,
+    RecommendationService? service,
+  }) : _service = service ?? RecommendationService();
+
+  final List<Product> catalog;
+  final RecommendationService _service;
+
+  PlanMode mode = PlanMode.ai;
+  int budget = 500000;
+  Occasion occasion = Occasion.wawancara;
+  List<Product> selected = const [];
+  OutfitRecommendation? recommendation;
+
+  int get total => selected.fold(0, (sum, p) => sum + p.price);
+  int get remaining => budget - total;
+  bool get isOverBudget => remaining < 0;
+
+  void setMode(PlanMode value) {
+    mode = value;
+    notifyListeners();
+  }
+
+  void setBudget(int value) {
+    budget = value;
+    notifyListeners();
+  }
+
+  void setOccasion(Occasion value) {
+    occasion = value;
+    notifyListeners();
+  }
+
+  /// Jalur 1: minta AI. Mengembalikan false jika tidak ada outfit yang cocok.
+  bool findRecommendation() {
+    recommendation = _service.recommend(
+      catalog: catalog,
+      budget: budget,
+      occasion: occasion,
+    );
+    selected = recommendation?.items ?? const [];
+    notifyListeners();
+    return recommendation != null;
+  }
+
+  /// Jalur 2: pilih sendiri. Satu kategori hanya boleh satu produk.
+  void toggleProduct(Product product) {
+    if (selected.any((p) => p.id == product.id)) {
+      selected = selected.where((p) => p.id != product.id).toList();
+    } else {
+      selected = [
+        ...selected.where((p) => p.category != product.category),
+        product,
+      ];
+    }
+    notifyListeners();
+  }
+
+  bool isSelected(Product product) => selected.any((p) => p.id == product.id);
+
+  void clearSelection() {
+    selected = const [];
+    recommendation = null;
+    notifyListeners();
+  }
+}
