@@ -15,22 +15,21 @@ class HomeScreen extends StatelessWidget {
   final OutfitController controller;
 
   void _onContinue(BuildContext context) {
-    if (controller.mode == PlanMode.manual) {
-      controller.clearSelection();
-      Navigator.push(context,
-          MaterialPageRoute(builder: (_) => CatalogScreen(controller: controller)));
-      return;
-    }
-
     final found = controller.findRecommendation();
     if (!found) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Belum ada outfit yang cocok dengan budget ini. Coba naikkan budget.'),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Belum ada outfit yang cocok dengan budget ini. Coba naikkan budget.',
+          ),
+        ),
+      );
       return;
     }
-    Navigator.push(context,
-        MaterialPageRoute(builder: (_) => ResultScreen(controller: controller)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ResultScreen(controller: controller)),
+    );
   }
 
   @override
@@ -50,23 +49,104 @@ class HomeScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Mau tampil untuk apa?',
-                              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, height: 1.2)),
-                          const SizedBox(height: 8),
-                          const Text('Isi budget dan acaranya, kami pilihkan outfit dari katalog toko.',
-                              style: TextStyle(fontSize: 15, color: AppColors.muted, height: 1.5)),
+                          SegmentedButton<PlanMode>(
+                            segments: const [
+                              ButtonSegment(
+                                value: PlanMode.ai,
+                                label: Text('Rekomendasi AI'),
+                              ),
+                              ButtonSegment(
+                                value: PlanMode.manual,
+                                label: Text('Pilih sendiri'),
+                              ),
+                            ],
+                            selected: {controller.mode},
+                            onSelectionChanged: (s) {
+                              final mode = s.first;
+                              if (mode == PlanMode.manual) {
+                                controller.clearSelection();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        CatalogScreen(controller: controller),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                           const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: SegmentedButton<PlanMode>(
-                              segments: const [
-                                ButtonSegment(value: PlanMode.ai, label: Text('Rekomendasi AI')),
-                                ButtonSegment(value: PlanMode.manual, label: Text('Pilih sendiri')),
-                              ],
-                              selected: {controller.mode},
-                              onSelectionChanged: (s) => controller.setMode(s.first),
+                          const Text(
+                            'Bingung mau pakai apa? Tanya AI.',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Ceritakan kebutuhanmu, kami rekomendasikan untukmu.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: AppColors.muted,
+                              height: 1.5,
+                            ),
+                          ),
+
+                          const SizedBox(height: 14),
+                          TextField(
+                            maxLines: 4,
+                            decoration: InputDecoration(
+                              labelText: 'Tuliskan permintaanmu',
+                              hintText: 'Contoh: Outfit wawancara kerja, rapi tapi tidak kaku.',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+
+                          // const SizedBox(height: 10),
+                          // Row(
+                          //   children: [
+                          //     const Expanded(
+                          //       child: Divider(
+                          //         color: Color(0xFFBFC5CE),
+                          //         thickness: 1,
+                          //       ),
+                          //     ),
+                          //     const SizedBox(width: 12),
+                          //     const Text(
+                          //       'atau atur sendiri',
+                          //       style: TextStyle(
+                          //         fontSize: 14,
+                          //         color: AppColors.muted,
+                          //       ),
+                          //     ),
+                          //     const SizedBox(width: 12),
+                          //     const Expanded(
+                          //       child: Divider(
+                          //         color: Color(0xFFBFC5CE),
+                          //         thickness: 1,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+
+                          // const SizedBox(height: 14),
+                          // const _SectionLabel('Acara'),
+                          // Wrap(
+                          //   spacing: 10,
+                          //   runSpacing: 10,
+                          //   children: [
+                          //     for (final o in Occasion.values)
+                          //       ChoiceChip(
+                          //         label: Text(o.label),
+                          //         selected: controller.occasion == o,
+                          //         onSelected: (_) => controller.setOccasion(o),
+                          //       ),
+                          //   ],
+                          // ),
                           const SizedBox(height: 24),
                           const _SectionLabel('Budget kamu'),
                           Container(
@@ -75,41 +155,31 @@ class HomeScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(formatRupiah(controller.budget),
-                                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+                                Text(
+                                  formatRupiah(controller.budget),
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                                 Slider(
                                   value: controller.budget.toDouble(),
                                   min: 100000,
                                   max: 1000000,
                                   divisions: 18,
-                                  onChanged: (v) => controller.setBudget(v.round()),
+                                  onChanged: (v) =>
+                                      controller.setBudget(v.round()),
                                 ),
                               ],
                             ),
                           ),
-                          if (isAi) ...[
-                            const SizedBox(height: 24),
-                            const _SectionLabel('Acara'),
-                            Wrap(
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: [
-                                for (final o in Occasion.values)
-                                  ChoiceChip(
-                                    label: Text(o.label),
-                                    selected: controller.occasion == o,
-                                    onSelected: (_) => controller.setOccasion(o),
-                                  ),
-                              ],
-                            ),
-                          ],
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   PrimaryButton(
-                    label: isAi ? 'Cari rekomendasi' : 'Pilih produk',
+                    label: 'Cari rekomendasi',
                     onPressed: () => _onContinue(context),
                   ),
                 ],
@@ -128,8 +198,14 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Text(text,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
-      );
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.muted,
+      ),
+    ),
+  );
 }
