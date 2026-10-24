@@ -17,7 +17,6 @@ class OutfitController extends ChangeNotifier {
   PlanMode mode = PlanMode.ai;
   int budget = 500000;
   String prompt = '';
-  Occasion occasion = Occasion.wawancara;
   List<Product> selected = const [];
   OutfitRecommendation? recommendation;
   String generatedImageURL = '';
@@ -33,11 +32,6 @@ class OutfitController extends ChangeNotifier {
 
   void setBudget(int value) {
     budget = value;
-    notifyListeners();
-  }
-
-  void setOccasion(Occasion value) {
-    occasion = value;
     notifyListeners();
   }
 

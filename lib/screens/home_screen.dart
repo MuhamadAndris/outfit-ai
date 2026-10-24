@@ -7,7 +7,6 @@ import '../widgets/primary_button.dart';
 import 'catalog_screen.dart';
 import 'result_screen.dart';
 
-/// Layar 1: pilih mode (AI atau pilih sendiri), isi budget dan acara.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.controller});
 
@@ -56,6 +55,7 @@ class HomeScreen extends StatelessWidget {
                               ButtonSegment(
                                 value: PlanMode.manual,
                                 label: Text('Pilih sendiri'),
+                                icon: Icon(Icons.checkroom),
                               ),
                             ],
                             selected: {controller.mode},
@@ -105,47 +105,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
 
-                          // const SizedBox(height: 10),
-                          // Row(
-                          //   children: [
-                          //     const Expanded(
-                          //       child: Divider(
-                          //         color: Color(0xFFBFC5CE),
-                          //         thickness: 1,
-                          //       ),
-                          //     ),
-                          //     const SizedBox(width: 12),
-                          //     const Text(
-                          //       'atau atur sendiri',
-                          //       style: TextStyle(
-                          //         fontSize: 14,
-                          //         color: AppColors.muted,
-                          //       ),
-                          //     ),
-                          //     const SizedBox(width: 12),
-                          //     const Expanded(
-                          //       child: Divider(
-                          //         color: Color(0xFFBFC5CE),
-                          //         thickness: 1,
-                          //       ),
-                          //     ),
-                          //   ],
-                          // ),
-
-                          // const SizedBox(height: 14),
-                          // const _SectionLabel('Acara'),
-                          // Wrap(
-                          //   spacing: 10,
-                          //   runSpacing: 10,
-                          //   children: [
-                          //     for (final o in Occasion.values)
-                          //       ChoiceChip(
-                          //         label: Text(o.label),
-                          //         selected: controller.occasion == o,
-                          //         onSelected: (_) => controller.setOccasion(o),
-                          //       ),
-                          //   ],
-                          // ),
                           const SizedBox(height: 24),
                           const _SectionLabel('Budget kamu'),
                           Container(

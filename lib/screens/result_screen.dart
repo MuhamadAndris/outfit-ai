@@ -28,15 +28,25 @@ class ResultScreen extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      BudgetBar(total: controller.total, budget: controller.budget),
+                      BudgetBar(
+                        total: controller.total,
+                        budget: controller.budget,
+                      ),
                       const SizedBox(height: 12),
-                      Text(explanation,
-                          style: const TextStyle(fontSize: 13, color: AppColors.muted, height: 1.5)),
+                      Text(
+                        explanation,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.muted,
+                          height: 1.5,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       for (final product in controller.selected) ...[
                         ProductTile(
                           product: product,
-                          subtitle: '${product.category.label} · cocok untuk ${controller.occasion.label.toLowerCase()}',
+                          subtitle:
+                              '${product.category.label} · cocok untuk ${controller.prompt.toLowerCase()}',
                         ),
                         const SizedBox(height: 10),
                       ],
@@ -47,7 +57,9 @@ class ResultScreen extends StatelessWidget {
                   label: 'Lihat pratinjau',
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => PreviewScreen(controller: controller)),
+                    MaterialPageRoute(
+                      builder: (_) => PreviewScreen(controller: controller),
+                    ),
                   ),
                 ),
               ],
