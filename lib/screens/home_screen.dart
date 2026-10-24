@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../core/format.dart';
-import '../models/product.dart';
 import '../state/outfit_controller.dart';
 import '../widgets/primary_button.dart';
 import 'catalog_screen.dart';
@@ -14,8 +13,8 @@ class HomeScreen extends StatelessWidget {
 
   final OutfitController controller;
 
-  void _onContinue(BuildContext context) {
-    final found = controller.findRecommendation();
+  void _onContinue(BuildContext context) async {
+    final found = await controller.findRecommendation();
     if (!found) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -39,7 +38,6 @@ class HomeScreen extends StatelessWidget {
         child: ListenableBuilder(
           listenable: controller,
           builder: (context, _) {
-            final isAi = controller.mode == PlanMode.ai;
             return Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -97,6 +95,7 @@ class HomeScreen extends StatelessWidget {
                           const SizedBox(height: 14),
                           TextField(
                             maxLines: 4,
+                            onChanged: (value) => controller.setPrompt(value),
                             decoration: InputDecoration(
                               labelText: 'Tuliskan permintaanmu',
                               hintText: 'Contoh: Outfit wawancara kerja, rapi tapi tidak kaku.',

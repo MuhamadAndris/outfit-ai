@@ -1,4 +1,8 @@
-import '../core/format.dart';
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
 import '../models/product.dart';
 
 /// Hasil rekomendasi: daftar item + penjelasan singkat.
@@ -11,68 +15,107 @@ class OutfitRecommendation {
   int get total => items.fold(0, (sum, p) => sum + p.price);
 }
 
-/// Otak rekomendasi. Alurnya (pendekatan hybrid):
-///   1. FILTER    : ambil produk yang cocok dengan acara.
-///   2. OPTIMASI  : pilih kombinasi terbaik yang tidak melewati budget.
-///   3. PENJELASAN: teks alasan (bisa diganti panggilan ke Gemini).
+/// Service untuk meminta rekomendasi dari backend.
 class RecommendationService {
-  OutfitRecommendation? recommend({
-    required List<Product> catalog,
+  RecommendationService({String? baseUrl, http.Client? client})
+    : _baseUrl = baseUrl ?? _defaultBaseUrl(),
+      _client = client ?? http.Client();
+
+  final String _baseUrl;
+  final http.Client _client;
+
+  static String _defaultBaseUrl() {
+    if (kIsWeb) return 'http://localhost:8000';
+
+    const apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (apiBaseUrl.isNotEmpty) return apiBaseUrl;
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8000';
+    }
+
+    return 'http://localhost:8000';
+  }
+
+  Future<OutfitRecommendation?> recommend({
     required int budget,
     required Occasion occasion,
-  }) {
-    // Langkah 1: filter per kategori.
-    final options = {
-      for (final category in ProductCategory.values)
-        category: catalog
-            .where((p) => p.category == category && p.occasions.contains(occasion))
-            .toList(),
-    };
+    required String prompt,
+    String mode = 'mannequin',
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_baseUrl/api/v1/recommendations'),
+    );
 
-    // Langkah 2: cari kombinasi terbaik (katalog kecil, jadi cukup dicoba semua).
-    // Skor: makin lengkap outfit-nya makin bagus, lalu makin dekat ke budget.
-    List<Product>? best;
-    var bestScore = -1;
+    request.headers['Accept'] = 'application/json';
 
-    void search(int index, List<Product> chosen, int total) {
-      if (index == ProductCategory.values.length) {
-        final score = chosen.length * 1000000 + total;
-        if (score > bestScore) {
-          bestScore = score;
-          best = List.of(chosen);
-        }
-        return;
+    request.fields['budget'] = budget.toString();
+    request.fields['prompt'] = '$prompt. Acara: ${occasion.label}.';
+    request.fields['mode'] = mode;
+
+    // DEBUG: tampilkan request yang akan dikirim
+    debugPrint('========== REQUEST BACKEND ==========');
+    debugPrint('URL: ${request.url}');
+    debugPrint('Method: ${request.method}');
+    debugPrint('Headers: ${request.headers}');
+    debugPrint('Fields:');
+
+    request.fields.forEach((key, value) {
+      debugPrint('  $key: $value');
+    });
+
+    debugPrint('=====================================');
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Gagal mendapatkan rekomendasi '
+        '(${response.statusCode}): ${response.body}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    // Sementara tampilkan respons API untuk diperiksa.
+    debugPrint('Response rekomendasi: $decoded');
+
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Format data rekomendasi tidak valid');
+    }
+
+    final rawItems = decoded['items'] ?? decoded['recommendations'];
+    if (rawItems is! List || rawItems.isEmpty) {
+      return null;
+    }
+
+    final products = <Product>[];
+    final reasons = <String>[];
+
+    for (final item in rawItems) {
+      if (item is! Map) continue;
+
+      final itemPayload = item['item'] ?? item;
+      if (itemPayload is Map) {
+        products.add(Product.fromJson(Map<String, dynamic>.from(itemPayload)));
       }
-      final category = ProductCategory.values[index];
-      for (final product in options[category]!) {
-        if (total + product.price <= budget) {
-          chosen.add(product);
-          search(index + 1, chosen, total + product.price);
-          chosen.removeLast();
-        }
-      }
-      // Aksesori boleh dilewati, kategori lain wajib ada.
-      if (category == ProductCategory.accessory) {
-        search(index + 1, chosen, total);
+
+      final reason = item['reason'];
+      if (reason is String && reason.trim().isNotEmpty) {
+        reasons.add(reason.trim());
       }
     }
 
-    search(0, [], 0);
+    if (products.isEmpty) {
+      return null;
+    }
 
-    final result = best;
-    if (result == null) return null;
-    return OutfitRecommendation(
-      items: result,
-      explanation: _explain(result, occasion, budget),
-    );
-  }
+    final explanation = reasons.isNotEmpty
+        ? reasons.join(' ')
+        : 'Rekomendasi otomatis untuk ${occasion.label.toLowerCase()} berdasarkan budget Anda.';
 
-  // Langkah 3: penjelasan. Ganti dengan panggilan Gemini jika ingin
-  // bahasa yang lebih natural. Kirim daftar item + acara sebagai prompt.
-  String _explain(List<Product> items, Occasion occasion, int budget) {
-    final total = items.fold(0, (sum, p) => sum + p.price);
-    return 'Semua item cocok untuk ${occasion.label.toLowerCase()}, '
-        'dan totalnya ${formatRupiah(total)} masih di dalam budget '
-        '${formatRupiah(budget)}.';
+    return OutfitRecommendation(items: products, explanation: explanation);
   }
 }

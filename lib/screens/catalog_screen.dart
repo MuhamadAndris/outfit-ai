@@ -38,23 +38,54 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   Future<void> _loadProducts() async {
+    debugPrint('[CatalogScreen] Mulai memuat produk...');
+    debugPrint('[CatalogScreen] Memanggil ProductService.fetchProduct()');
+
     try {
       final products = await _productService.fetchProduct();
 
-      if (!mounted) return;
+      debugPrint('[CatalogScreen] Berhasil menerima data backend');
+      debugPrint('[CatalogScreen] Jumlah produk: ${products.length}');
+
+      // Tampilkan detail produk yang diterima.
+      for (final product in products) {
+        debugPrint(
+          '[CatalogScreen] '
+          'Nama: ${product.name} | '
+          'Kategori: ${product.category}',
+        );
+      }
+
+      if (!mounted) {
+        debugPrint(
+          '[CatalogScreen] Widget sudah tidak aktif, '
+          'setState dibatalkan.',
+        );
+        return;
+      }
 
       setState(() {
         _products = products;
         _isLoading = false;
         _error = null;
       });
-    } catch (e) {
+
+      debugPrint(
+        '[CatalogScreen] State diperbarui. '
+        'Total produk di katalog: ${_products.length}',
+      );
+    } catch (e, stackTrace) {
+      debugPrint('[CatalogScreen] GAGAL memuat produk: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
       if (!mounted) return;
 
       setState(() {
         _error = e.toString();
         _isLoading = false;
       });
+
+      debugPrint('[CatalogScreen] Error ditampilkan di UI: $_error');
     }
   }
 

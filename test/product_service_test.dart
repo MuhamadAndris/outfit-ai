@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:outfit_ai/models/product.dart';
 import 'package:outfit_ai/services/product_service.dart';
+import 'package:outfit_ai/services/recommendation_service.dart';
 
 void main() {
   group('ProductService', () {
@@ -49,5 +50,56 @@ void main() {
         'http://localhost:8000/uploads/item-12.jpg',
       );
     });
+  });
+
+  group('RecommendationService', () {
+    test(
+      'maps backend recommendation payload into OutfitRecommendation',
+      () async {
+        final mockClient = MockClient((request) async {
+          expect(request.url.toString(), contains('/api/v1/recommendations'));
+
+          final payload = {
+            'items': [
+              {
+                'item': {
+                  'id': 3026,
+                  'name': 'Arrow Men White Cap',
+                  'price': 25000.0,
+                  'description': 'Jenis: Caps. Warna: White.',
+                  'image_url':
+                      'http://10.146.192.104:8000/public/images/items/abc.png',
+                  'category': {
+                    'id': 5,
+                    'name': 'topi',
+                    'body_zone': 'accessory',
+                  },
+                },
+                'reason': 'Dipilih otomatis karena sesuai budget dan melengkapi kategori outfit.',
+              },
+            ],
+          };
+
+          return http.Response(jsonEncode(payload), 200);
+        });
+
+        final service = RecommendationService(
+          baseUrl: 'http://example.com',
+          client: mockClient,
+        );
+
+        final recommendation = await service.recommend(
+          budget: 500000,
+          occasion: Occasion.wawancara,
+          prompt: 'Pakai outfit formal',
+        );
+
+        expect(recommendation, isNotNull);
+        expect(recommendation!.items, hasLength(1));
+        expect(recommendation.items.first.name, 'Arrow Men White Cap');
+        expect(recommendation.items.first.category, ProductCategory.accessory);
+        expect(recommendation.explanation, contains('Dipilih otomatis'));
+      },
+    );
   });
 }
