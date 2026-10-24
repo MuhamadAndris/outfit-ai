@@ -20,6 +20,7 @@ class OutfitController extends ChangeNotifier {
   Occasion occasion = Occasion.wawancara;
   List<Product> selected = const [];
   OutfitRecommendation? recommendation;
+  String generatedImageURL = '';
 
   int get total => selected.fold(0, (sum, p) => sum + p.price);
   int get remaining => budget - total;
@@ -47,12 +48,9 @@ class OutfitController extends ChangeNotifier {
 
   /// Jalur 1: minta AI. Mengembalikan false jika tidak ada outfit yang cocok.
   Future<bool> findRecommendation() async {
-    recommendation = await _service.recommend(
-      budget: budget,
-      occasion: occasion,
-      prompt: prompt,
-    );
+    recommendation = await _service.recommend(budget: budget, prompt: prompt);
     selected = recommendation?.items ?? const [];
+    generatedImageURL = recommendation?.generatedImageURL ?? '';
     notifyListeners();
     return recommendation != null;
   }

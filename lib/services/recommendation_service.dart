@@ -7,10 +7,15 @@ import '../models/product.dart';
 
 /// Hasil rekomendasi: daftar item + penjelasan singkat.
 class OutfitRecommendation {
-  const OutfitRecommendation({required this.items, required this.explanation});
+  const OutfitRecommendation({
+    required this.items,
+    required this.explanation,
+    required this.generatedImageURL,
+  });
 
   final List<Product> items;
   final String explanation;
+  final String generatedImageURL;
 
   int get total => items.fold(0, (sum, p) => sum + p.price);
 }
@@ -39,7 +44,6 @@ class RecommendationService {
 
   Future<OutfitRecommendation?> recommend({
     required int budget,
-    required Occasion occasion,
     required String prompt,
     String mode = 'mannequin',
   }) async {
@@ -51,7 +55,6 @@ class RecommendationService {
     request.headers['Accept'] = 'application/json';
 
     request.fields['budget'] = budget.toString();
-    request.fields['prompt'] = '$prompt. Acara: ${occasion.label}.';
     request.fields['mode'] = mode;
 
     // DEBUG: tampilkan request yang akan dikirim
@@ -93,6 +96,7 @@ class RecommendationService {
 
     final products = <Product>[];
     final reasons = <String>[];
+    final String generatedImageURL = decoded['generated_image_url'] ?? '';
 
     for (final item in rawItems) {
       if (item is! Map) continue;
@@ -114,8 +118,12 @@ class RecommendationService {
 
     final explanation = reasons.isNotEmpty
         ? reasons.join(' ')
-        : 'Rekomendasi otomatis untuk ${occasion.label.toLowerCase()} berdasarkan budget Anda.';
+        : 'Rekomendasi otomatis untuk ${prompt.toString()} berdasarkan budget Anda.';
 
-    return OutfitRecommendation(items: products, explanation: explanation);
+    return OutfitRecommendation(
+      items: products,
+      explanation: explanation,
+      generatedImageURL: generatedImageURL,
+    );
   }
 }

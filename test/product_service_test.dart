@@ -90,7 +90,6 @@ void main() {
 
         final recommendation = await service.recommend(
           budget: 500000,
-          occasion: Occasion.wawancara,
           prompt: 'Pakai outfit formal',
         );
 
