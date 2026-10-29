@@ -103,7 +103,12 @@ class RecommendationService {
 
       final itemPayload = item['item'] ?? item;
       if (itemPayload is Map) {
-        products.add(Product.fromJson(Map<String, dynamic>.from(itemPayload)));
+        products.add(
+          Product.fromJson(
+            Map<String, dynamic>.from(itemPayload),
+            reason: item['reason']?.toString() ?? '',
+          ),
+        );
       }
 
       final reason = item['reason'];

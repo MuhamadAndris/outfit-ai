@@ -17,9 +17,10 @@ class Product {
     required this.category,
     required this.categoryName,
     this.imageUrl,
+    this.reason = '',
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) {
+  factory Product.fromJson(Map<String, dynamic> json, {String reason = ''}) {
     final rawCategory = json['category'];
     final categoryMap = rawCategory is Map
         ? Map<String, dynamic>.from(rawCategory)
@@ -47,6 +48,7 @@ class Product {
           : _fallbackCategoryName(category),
       price: _parseInt(rawPrice),
       imageUrl: json['image_url'] ?? json['imageUrl'] ?? json['image_path'],
+      reason: reason,
     );
   }
 
@@ -145,4 +147,5 @@ class Product {
   final String categoryName;
   final int price; // dalam rupiah
   final String? imageUrl; // isi dengan foto produk asli dari katalog
+  final String reason;
 }

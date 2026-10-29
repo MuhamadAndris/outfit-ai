@@ -20,7 +20,7 @@ class ResultScreen extends StatelessWidget {
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) {
-          final explanation = controller.recommendation?.explanation ?? '';
+          // final explanation = controller.recommendation?.explanation ?? '';
           return Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
             child: Column(
@@ -33,21 +33,17 @@ class ResultScreen extends StatelessWidget {
                         budget: controller.budget,
                       ),
                       const SizedBox(height: 12),
-                      Text(
-                        explanation,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.muted,
-                          height: 1.5,
-                        ),
-                      ),
+                      // Text(
+                      //   explanation,
+                      //   style: const TextStyle(
+                      //     fontSize: 13,
+                      //     color: AppColors.muted,
+                      //     height: 1.5,
+                      //   ),
+                      // ),
                       const SizedBox(height: 12),
                       for (final product in controller.selected) ...[
-                        ProductTile(
-                          product: product,
-                          subtitle:
-                              '${product.category.label} · cocok untuk ${controller.prompt.toLowerCase()}',
-                        ),
+                        ProductTile(product: product, subtitle: product.reason),
                         const SizedBox(height: 10),
                       ],
                     ],
