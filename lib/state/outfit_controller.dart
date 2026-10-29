@@ -6,7 +6,6 @@ import '../services/recommendation_service.dart';
 enum PlanMode { ai, manual }
 
 /// Menyimpan semua data yang dipakai lintas layar:
-/// mode, budget, acara, dan produk yang dipilih.
 /// Layar cukup mendengarkan controller ini (lihat ListenableBuilder).
 class OutfitController extends ChangeNotifier {
   OutfitController({RecommendationService? service})
@@ -64,9 +63,15 @@ class OutfitController extends ChangeNotifier {
 
   bool isSelected(Product product) => selected.any((p) => p.id == product.id);
 
+  void setGeneratedImageURL(String value) {
+    generatedImageURL = value;
+    notifyListeners();
+  }
+
   void clearSelection() {
     selected = const [];
     recommendation = null;
+    generatedImageURL = '';
     notifyListeners();
   }
 }

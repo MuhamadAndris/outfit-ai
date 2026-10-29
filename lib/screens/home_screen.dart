@@ -7,27 +7,49 @@ import '../widgets/primary_button.dart';
 import 'catalog_screen.dart';
 import 'result_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.controller});
 
   final OutfitController controller;
 
-  void _onContinue(BuildContext context) async {
-    final found = await controller.findRecommendation();
-    if (!found) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Belum ada outfit yang cocok dengan budget ini. Coba naikkan budget.',
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _isSubmitting = false;
+
+  Future<void> _onContinue(BuildContext context) async {
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final found = await widget.controller.findRecommendation();
+      if (!mounted) return;
+
+      if (!found) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Belum ada outfit yang cocok dengan budget ini. Coba naikkan budget.',
+            ),
           ),
+        );
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResultScreen(controller: widget.controller),
         ),
       );
-      return;
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ResultScreen(controller: controller)),
-    );
   }
 
   @override
@@ -35,7 +57,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: ListenableBuilder(
-          listenable: controller,
+          listenable: widget.controller,
           builder: (context, _) {
             return Padding(
               padding: const EdgeInsets.all(24),
@@ -58,16 +80,17 @@ class HomeScreen extends StatelessWidget {
                                 icon: Icon(Icons.checkroom),
                               ),
                             ],
-                            selected: {controller.mode},
+                            selected: {widget.controller.mode},
                             onSelectionChanged: (s) {
                               final mode = s.first;
                               if (mode == PlanMode.manual) {
-                                controller.clearSelection();
+                                widget.controller.clearSelection();
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        CatalogScreen(controller: controller),
+                                    builder: (_) => CatalogScreen(
+                                      controller: widget.controller,
+                                    ),
                                   ),
                                 );
                               }
@@ -95,7 +118,8 @@ class HomeScreen extends StatelessWidget {
                           const SizedBox(height: 14),
                           TextField(
                             maxLines: 4,
-                            onChanged: (value) => controller.setPrompt(value),
+                            onChanged: (value) =>
+                                widget.controller.setPrompt(value),
                             decoration: InputDecoration(
                               labelText: 'Tuliskan permintaanmu',
                               hintText: 'Contoh: Outfit wawancara kerja, rapi tapi tidak kaku.',
@@ -114,19 +138,19 @@ class HomeScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  formatRupiah(controller.budget),
+                                  formatRupiah(widget.controller.budget),
                                   style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 Slider(
-                                  value: controller.budget.toDouble(),
+                                  value: widget.controller.budget.toDouble(),
                                   min: 100000,
                                   max: 1000000,
                                   divisions: 18,
                                   onChanged: (v) =>
-                                      controller.setBudget(v.round()),
+                                      widget.controller.setBudget(v.round()),
                                 ),
                               ],
                             ),
@@ -138,6 +162,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   PrimaryButton(
                     label: 'Cari rekomendasi',
+                    isLoading: _isSubmitting,
                     onPressed: () => _onContinue(context),
                   ),
                 ],

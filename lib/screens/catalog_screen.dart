@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../core/format.dart';
 import '../models/product.dart';
+import '../services/product_service.dart';
+import '../services/try_on_service.dart';
 import '../state/outfit_controller.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/product_card.dart';
 import 'preview_screen.dart';
-import '../services/product_service.dart';
 
 /// Layar 2b: pelanggan memilih produk sendiri dari katalog.
 class CatalogScreen extends StatefulWidget {
@@ -24,9 +25,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
   ProductCategory? _category; // null = semua kategori
 
   final ProductService _productService = ProductService();
+  final TryOnService _tryOnService = TryOnService();
 
   List<Product> _products = [];
   bool _isLoading = true;
+  bool _isSubmittingPreview = false;
   String? _error;
 
   OutfitController get _c => widget.controller;
@@ -186,14 +189,61 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       const SizedBox(height: 12),
                       PrimaryButton(
                         label: 'Lihat pratinjau',
-                        onPressed: _c.selected.isEmpty
+                        isLoading: _isSubmittingPreview,
+                        onPressed: _c.selected.isEmpty || _isSubmittingPreview
                             ? null
-                            : () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PreviewScreen(controller: _c),
-                                ),
-                              ),
+                            : () async {
+                                setState(() => _isSubmittingPreview = true);
+
+                                try {
+                                  final result = await _tryOnService
+                                      .tryOnOutfit(
+                                        productSelected: _c.selected,
+                                        mode: 'mannequin',
+                                      );
+
+                                  if (!mounted) return;
+
+                                  if (result == null ||
+                                      result.generatedImageURL.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Gagal membuat pratinjau outfit. Coba pilih item lain.',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  _c.setGeneratedImageURL(
+                                    result.generatedImageURL,
+                                  );
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          PreviewScreen(controller: _c),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Gagal mengirim pratinjau: $e',
+                                      ),
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(
+                                      () => _isSubmittingPreview = false,
+                                    );
+                                  }
+                                }
+                              },
                       ),
                     ],
                   ),

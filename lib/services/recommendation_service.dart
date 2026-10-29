@@ -53,7 +53,7 @@ class RecommendationService {
     );
 
     request.headers['Accept'] = 'application/json';
-
+    request.fields['prompt'] = prompt;
     request.fields['budget'] = budget.toString();
     request.fields['mode'] = mode;
 

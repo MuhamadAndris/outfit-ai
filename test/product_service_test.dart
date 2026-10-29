@@ -43,7 +43,8 @@ void main() {
       expect(products, hasLength(1));
       expect(products.first.id, '12');
       expect(products.first.name, 'Kemeja Linen Putih');
-      expect(products.first.category, ProductCategory.top);
+      expect(products.first.category, ProductCategory.upper);
+      expect(products.first.categoryName, 'atasan');
       expect(products.first.price, 150000);
       expect(
         products.first.imageUrl,

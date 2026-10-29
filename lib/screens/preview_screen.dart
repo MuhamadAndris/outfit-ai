@@ -6,7 +6,6 @@ import '../models/product.dart';
 import '../state/outfit_controller.dart';
 import '../widgets/primary_button.dart';
 
-/// Layar 3: lihat produk terpilih di manekin atau di foto badan sendiri.
 class PreviewScreen extends StatefulWidget {
   const PreviewScreen({super.key, required this.controller});
 
@@ -47,8 +46,13 @@ class _PreviewScreenState extends State<PreviewScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  'Sisa ${formatRupiah(c.remaining)}',
-                  style: const TextStyle(color: AppColors.muted),
+                  c.isOverBudget
+                      ? 'Melebihi budget ${formatRupiah(-c.remaining)}'
+                      : 'Sisa ${formatRupiah(c.remaining)}',
+                  style: TextStyle(
+                    color: c.isOverBudget ? AppColors.accent : AppColors.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
