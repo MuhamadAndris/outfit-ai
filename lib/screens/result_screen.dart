@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/app_theme.dart';
 import '../state/outfit_controller.dart';
 import '../widgets/budget_bar.dart';
 import '../widgets/primary_button.dart';
@@ -49,6 +48,27 @@ class ResultScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      "Rekomendasi lain",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 7),
                 PrimaryButton(
                   label: 'Lihat pratinjau',
                   onPressed: () => Navigator.push(
