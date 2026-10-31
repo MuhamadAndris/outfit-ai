@@ -42,10 +42,11 @@ class _ResultScreenState extends State<ResultScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      debugPrint('Gagal mendapatkan rekomendasi: $e');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mendapatkan rekomendasi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mendapatkan rekomendasi')));
     } finally {
       if (mounted) {
         setState(() {
@@ -106,22 +107,35 @@ class _ResultScreenState extends State<ResultScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            "Rekomendasi lain",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _isSubmitting
+                          ? Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text("Memproses... "),
+                              ],
+                            )
+                          : const Text(
+                              "Rekomendasi lain",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 7),
