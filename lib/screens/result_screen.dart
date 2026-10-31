@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:outfit_ai/core/app_theme.dart';
 
 import '../state/outfit_controller.dart';
 import '../widgets/budget_bar.dart';
@@ -61,7 +62,7 @@ class _ResultScreenState extends State<ResultScreen> {
       body: ListenableBuilder(
         listenable: widget.controller,
         builder: (context, _) {
-          // final explanation = controller.recommendation?.explanation ?? '';
+          final prompt = widget.controller.prompt;
           return Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
             child: Column(
@@ -73,16 +74,23 @@ class _ResultScreenState extends State<ResultScreen> {
                         total: widget.controller.total,
                         budget: widget.controller.budget,
                       ),
-                      const SizedBox(height: 12),
-                      // Text(
-                      //   explanation,
-                      //   style: const TextStyle(
-                      //     fontSize: 13,
-                      //     color: AppColors.muted,
-                      //     height: 1.5,
-                      //   ),
-                      // ),
-                      const SizedBox(height: 12),
+
+                      prompt.isNotEmpty
+                          ? Row(
+                              children: [
+                                const SizedBox(height: 50),
+                                Text(
+                                  'Permintaan: $prompt',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.muted,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(children: [const SizedBox(height: 12)]),
+
                       for (final product in widget.controller.selected) ...[
                         ProductTile(product: product, subtitle: product.reason),
                         const SizedBox(height: 10),
