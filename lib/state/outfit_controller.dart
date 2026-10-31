@@ -16,9 +16,11 @@ class OutfitController extends ChangeNotifier {
   PlanMode mode = PlanMode.ai;
   int budget = 500000;
   String prompt = '';
+  String prevPrompt = '';
   List<Product> selected = const [];
   OutfitRecommendation? recommendation;
   String generatedImageURL = '';
+  List<String> prevCombinationCode = [];
 
   int get total => selected.fold(0, (sum, p) => sum + p.price);
   int get remaining => budget - total;
@@ -44,6 +46,30 @@ class OutfitController extends ChangeNotifier {
     recommendation = await _service.recommend(budget: budget, prompt: prompt);
     selected = recommendation?.items ?? const [];
     generatedImageURL = recommendation?.generatedImageURL ?? '';
+
+    recommendation?.newCombinationCode.forEach((c) {
+      final exists = prevCombinationCode.any((codes) => codes == c);
+      if (!exists) prevCombinationCode.add(c);
+    });
+
+    notifyListeners();
+    return recommendation != null;
+  }
+
+  Future<bool> refreshRecomendation() async {
+    recommendation = await _service.recommend(
+      budget: budget,
+      prompt: prompt,
+      prevCombinationCode: prevCombinationCode,
+    );
+    selected = recommendation?.items ?? const [];
+    generatedImageURL = recommendation?.generatedImageURL ?? '';
+
+    recommendation?.newCombinationCode.forEach((c) {
+      final exists = prevCombinationCode.any((codes) => codes == c);
+      if (!exists) prevCombinationCode.add(c);
+    });
+
     notifyListeners();
     return recommendation != null;
   }
@@ -72,6 +98,7 @@ class OutfitController extends ChangeNotifier {
     selected = const [];
     recommendation = null;
     generatedImageURL = '';
+    prevCombinationCode = [];
     notifyListeners();
   }
 }

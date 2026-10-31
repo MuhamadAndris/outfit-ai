@@ -7,17 +7,59 @@ import '../widgets/product_tile.dart';
 import 'preview_screen.dart';
 
 /// Layar 2a: hasil rekomendasi AI.
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key, required this.controller});
 
   final OutfitController controller;
+
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  bool _isSubmitting = false;
+
+  Future<void> _onRefresh() async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final found = await widget.controller.refreshRecomendation();
+
+      if (!found) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Belum ada outfit yang cocok dengan budget ini. Coba naikkan budget.',
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mendapatkan rekomendasi: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Rekomendasi outfit')),
       body: ListenableBuilder(
-        listenable: controller,
+        listenable: widget.controller,
         builder: (context, _) {
           // final explanation = controller.recommendation?.explanation ?? '';
           return Padding(
@@ -28,8 +70,8 @@ class ResultScreen extends StatelessWidget {
                   child: ListView(
                     children: [
                       BudgetBar(
-                        total: controller.total,
-                        budget: controller.budget,
+                        total: widget.controller.total,
+                        budget: widget.controller.budget,
                       ),
                       const SizedBox(height: 12),
                       // Text(
@@ -41,7 +83,7 @@ class ResultScreen extends StatelessWidget {
                       //   ),
                       // ),
                       const SizedBox(height: 12),
-                      for (final product in controller.selected) ...[
+                      for (final product in widget.controller.selected) ...[
                         ProductTile(product: product, subtitle: product.reason),
                         const SizedBox(height: 10),
                       ],
@@ -49,7 +91,7 @@ class ResultScreen extends StatelessWidget {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _isSubmitting ? null : _onRefresh,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF1F5F9),
                     shape: RoundedRectangleBorder(
@@ -58,14 +100,20 @@ class ResultScreen extends StatelessWidget {
                   ),
                   child: SizedBox(
                     width: double.infinity,
-                    child: Text(
-                      "Rekomendasi lain",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            "Rekomendasi lain",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 ),
                 SizedBox(height: 7),
@@ -74,7 +122,8 @@ class ResultScreen extends StatelessWidget {
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => PreviewScreen(controller: controller),
+                      builder: (_) =>
+                          PreviewScreen(controller: widget.controller),
                     ),
                   ),
                 ),

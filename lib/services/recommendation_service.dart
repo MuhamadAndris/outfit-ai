@@ -11,11 +11,13 @@ class OutfitRecommendation {
     required this.items,
     required this.explanation,
     required this.generatedImageURL,
+    required this.newCombinationCode,
   });
 
   final List<Product> items;
   final String explanation;
   final String generatedImageURL;
+  final List<String> newCombinationCode;
 
   int get total => items.fold(0, (sum, p) => sum + p.price);
 }
@@ -45,6 +47,7 @@ class RecommendationService {
   Future<OutfitRecommendation?> recommend({
     required int budget,
     required String prompt,
+    List<String> prevCombinationCode = const [],
     String mode = 'mannequin',
   }) async {
     final request = http.MultipartRequest(
@@ -54,6 +57,8 @@ class RecommendationService {
 
     request.headers['Accept'] = 'application/json';
     request.fields['prompt'] = prompt;
+    request.fields['previous_combinations'] = prevCombinationCode.join(',');
+    request.fields['refresh'] = prevCombinationCode.isNotEmpty.toString();
     request.fields['budget'] = budget.toString();
     request.fields['mode'] = mode;
 
@@ -82,9 +87,6 @@ class RecommendationService {
 
     final decoded = jsonDecode(response.body);
 
-    // Sementara tampilkan respons API untuk diperiksa.
-    debugPrint('Response rekomendasi: $decoded');
-
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Format data rekomendasi tidak valid');
     }
@@ -97,6 +99,10 @@ class RecommendationService {
     final products = <Product>[];
     final reasons = <String>[];
     final String generatedImageURL = decoded['generated_image_url'] ?? '';
+    final List<String> newCombinationCode =
+        (decoded['combination'] as List<dynamic>? ?? [])
+            .map((e) => e.toString())
+            .toList();
 
     for (final item in rawItems) {
       if (item is! Map) continue;
@@ -117,6 +123,15 @@ class RecommendationService {
       }
     }
 
+    // DEBUG: tampilkan response yang diterima
+    debugPrint('========== RESPONSE BACKEND ==========');
+    // debugPrint('Response rekomendasi: $decoded');
+    debugPrint('New Combination code: $newCombinationCode');
+    debugPrint('Products: $products');
+    debugPrint('Reason: $reasons');
+    debugPrint('Generated Image URL: $generatedImageURL');
+    debugPrint('=====================================');
+
     if (products.isEmpty) {
       return null;
     }
@@ -129,6 +144,7 @@ class RecommendationService {
       items: products,
       explanation: explanation,
       generatedImageURL: generatedImageURL,
+      newCombinationCode: newCombinationCode,
     );
   }
 }
