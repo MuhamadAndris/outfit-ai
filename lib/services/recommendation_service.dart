@@ -49,6 +49,7 @@ class RecommendationService {
     required String prompt,
     List<String> prevCombinationCode = const [],
     String mode = 'mannequin',
+    bool refresh = false,
   }) async {
     final request = http.MultipartRequest(
       'POST',
@@ -58,7 +59,7 @@ class RecommendationService {
     request.headers['Accept'] = 'application/json';
     request.fields['prompt'] = prompt;
     request.fields['previous_combinations'] = prevCombinationCode.join(',');
-    request.fields['refresh'] = prevCombinationCode.isNotEmpty.toString();
+    request.fields['refresh'] = refresh.toString();
     request.fields['budget'] = budget.toString();
     request.fields['mode'] = mode;
 

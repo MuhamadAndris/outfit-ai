@@ -42,25 +42,12 @@ class OutfitController extends ChangeNotifier {
   }
 
   /// Jalur 1: minta AI. Mengembalikan false jika tidak ada outfit yang cocok.
-  Future<bool> findRecommendation() async {
-    recommendation = await _service.recommend(budget: budget, prompt: prompt);
-    selected = recommendation?.items ?? const [];
-    generatedImageURL = recommendation?.generatedImageURL ?? '';
-
-    recommendation?.newCombinationCode.forEach((c) {
-      final exists = prevCombinationCode.any((codes) => codes == c);
-      if (!exists) prevCombinationCode.add(c);
-    });
-
-    notifyListeners();
-    return recommendation != null;
-  }
-
-  Future<bool> refreshRecomendation() async {
+  Future<bool> findRecommendation({bool refresh = false}) async {
     recommendation = await _service.recommend(
       budget: budget,
       prompt: prompt,
-      prevCombinationCode: prevCombinationCode,
+      prevCombinationCode: refresh ? prevCombinationCode : [],
+      refresh: refresh,
     );
     selected = recommendation?.items ?? const [];
     generatedImageURL = recommendation?.generatedImageURL ?? '';

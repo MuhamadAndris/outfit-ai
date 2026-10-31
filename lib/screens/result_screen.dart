@@ -27,7 +27,7 @@ class _ResultScreenState extends State<ResultScreen> {
     });
 
     try {
-      final found = await widget.controller.refreshRecomendation();
+      final found = await widget.controller.findRecommendation(refresh: true);
 
       if (!found) {
         ScaffoldMessenger.of(context).showSnackBar(
