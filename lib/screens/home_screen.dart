@@ -45,6 +45,17 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (_) => ResultScreen(controller: widget.controller),
         ),
       );
+    } catch (e, stackTrace) {
+      debugPrint('[CatalogScreen] GAGAL mencari rekomendasi: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal mencari rekomendasi. Cek koneksi internet anda'),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
