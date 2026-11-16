@@ -9,13 +9,18 @@ enum PlanMode { ai, manual }
 /// Layar cukup mendengarkan controller ini (lihat ListenableBuilder).
 class OutfitController extends ChangeNotifier {
   OutfitController({RecommendationService? service})
-    : _service = service ?? RecommendationService();
+    : _service = service ?? RecommendationService() {
+    _syncRequestPrompt();
+  }
 
   final RecommendationService _service;
 
   PlanMode mode = PlanMode.ai;
   int budget = 500000;
   String prompt = '';
+  String gender = 'Laki-laki';
+  String style = 'Formal';
+  String requestPrompt = '';
   String prevPrompt = '';
   List<Product> selected = const [];
   OutfitRecommendation? recommendation;
@@ -36,8 +41,29 @@ class OutfitController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _syncRequestPrompt() {
+    requestPrompt = [
+      prompt.trim(),
+      style.trim(),
+      gender.trim(),
+    ].where((value) => value.isNotEmpty).join(', ');
+  }
+
   void setPrompt(String value) {
     prompt = value;
+    _syncRequestPrompt();
+    notifyListeners();
+  }
+
+  void setGender(String value) {
+    gender = value;
+    _syncRequestPrompt();
+    notifyListeners();
+  }
+
+  void setStyle(String value) {
+    style = value;
+    _syncRequestPrompt();
     notifyListeners();
   }
 
@@ -45,7 +71,7 @@ class OutfitController extends ChangeNotifier {
   Future<bool> findRecommendation({bool refresh = false}) async {
     recommendation = await _service.recommend(
       budget: budget,
-      prompt: prompt,
+      prompt: requestPrompt,
       prevCombinationCode: refresh ? prevCombinationCode : [],
       refresh: refresh,
     );

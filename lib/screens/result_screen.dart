@@ -63,7 +63,7 @@ class _ResultScreenState extends State<ResultScreen> {
       body: ListenableBuilder(
         listenable: widget.controller,
         builder: (context, _) {
-          final prompt = widget.controller.prompt;
+          final prompt = widget.controller.requestPrompt;
           return Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
             child: Column(

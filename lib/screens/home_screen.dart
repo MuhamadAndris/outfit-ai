@@ -17,6 +17,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final List<String> _styleList = ['Kasual', 'Formal', 'Santai'];
+  final List<String> _genderList = ['Laki-laki', 'Perempuan'];
+
   bool _isSubmitting = false;
 
   Future<void> _onContinue(BuildContext context) async {
@@ -29,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       if (!found) {
+        if (!context.mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -38,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         return;
       }
+
+      if (!context.mounted) return;
 
       Navigator.push(
         context,
@@ -49,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
       debugPrint('[CatalogScreen] GAGAL mencari rekomendasi: $e');
       debugPrintStack(stackTrace: stackTrace);
 
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -65,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // const navy = Color(0xFF0F1D3A);
     return Scaffold(
       body: SafeArea(
         child: ListenableBuilder(
@@ -138,6 +146,57 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
+                          ),
+
+                          const SizedBox(height: 24),
+                          const Text('Gender'),
+                          Wrap(
+                            spacing: 12,
+                            children: _genderList.map((gender) {
+                              final isSelected =
+                                  gender == widget.controller.gender;
+
+                              return ChoiceChip(
+                                label: Text(gender),
+                                selected: isSelected,
+                                backgroundColor: Colors.white,
+                                showCheckmark: false,
+                                onSelected: (_) =>
+                                    widget.controller.setGender(gender),
+                                shape: StadiumBorder(
+                                  side: BorderSide(color: Colors.grey.shade400),
+                                ),
+                                padding: EdgeInsetsGeometry.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+
+                          const SizedBox(height: 24),
+                          const Text('Gaya'),
+                          Wrap(
+                            spacing: 12,
+                            children: _styleList.map((gaya) {
+                              final isSelected =
+                                  widget.controller.style == gaya;
+                              return ChoiceChip(
+                                label: Text(gaya),
+                                selected: isSelected,
+                                onSelected: (_) =>
+                                    widget.controller.setStyle(gaya),
+                                showCheckmark: false,
+                                backgroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                shape: StadiumBorder(
+                                  side: BorderSide(color: Colors.grey.shade400),
+                                ),
+                              );
+                            }).toList(),
                           ),
 
                           const SizedBox(height: 24),

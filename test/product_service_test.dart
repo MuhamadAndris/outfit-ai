@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:outfit_ai/models/product.dart';
 import 'package:outfit_ai/services/product_service.dart';
 import 'package:outfit_ai/services/recommendation_service.dart';
+import 'package:outfit_ai/state/outfit_controller.dart';
 
 void main() {
   group('ProductService', () {
@@ -101,5 +102,22 @@ void main() {
         expect(recommendation.explanation, contains('Dipilih otomatis'));
       },
     );
+  });
+
+  group('OutfitController', () {
+    test('merges prompt, gender, and style into one request prompt', () {
+      final controller = OutfitController();
+
+      controller.setPrompt('Buatkan outfit wawancara');
+      controller.setGender('Perempuan');
+      controller.setStyle('Formal');
+
+      expect(controller.prompt, 'Buatkan outfit wawancara');
+      expect(controller.gender, 'Perempuan');
+      expect(controller.style, 'Formal');
+      expect(controller.requestPrompt, contains('Buatkan outfit wawancara'));
+      expect(controller.requestPrompt, contains('Perempuan'));
+      expect(controller.requestPrompt, contains('Formal'));
+    });
   });
 }
