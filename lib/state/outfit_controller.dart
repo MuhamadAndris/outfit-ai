@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:outfit_ai/widgets/pick_image.dart';
 
 import '../models/product.dart';
 import '../services/recommendation_service.dart';
 
 enum PlanMode { ai, manual }
+
+enum PreviewMode { mannequin, user_photo }
 
 /// Menyimpan semua data yang dipakai lintas layar:
 /// Layar cukup mendengarkan controller ini (lihat ListenableBuilder).
@@ -16,12 +21,14 @@ class OutfitController extends ChangeNotifier {
   final RecommendationService _service;
 
   PlanMode mode = PlanMode.ai;
+  PreviewMode previewMode = PreviewMode.mannequin;
   int budget = 500000;
   String prompt = '';
   String gender = 'Laki-laki';
   String style = 'Formal';
   String requestPrompt = '';
   String prevPrompt = '';
+  File? selectedImage;
   List<Product> selected = const [];
   OutfitRecommendation? recommendation;
   String generatedImageURL = '';
@@ -31,8 +38,22 @@ class OutfitController extends ChangeNotifier {
   int get remaining => budget - total;
   bool get isOverBudget => remaining < 0;
 
+  Future<void> selectImage() async {
+    final image = await pickImage();
+
+    if (image != null) {
+      selectedImage = image;
+      notifyListeners();
+    }
+  }
+
   void setMode(PlanMode value) {
     mode = value;
+    notifyListeners();
+  }
+
+  void setPreviewMode(PreviewMode value) {
+    previewMode = value;
     notifyListeners();
   }
 
@@ -67,13 +88,14 @@ class OutfitController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Jalur 1: minta AI. Mengembalikan false jika tidak ada outfit yang cocok.
   Future<bool> findRecommendation({bool refresh = false}) async {
     recommendation = await _service.recommend(
       budget: budget,
       prompt: requestPrompt,
       prevCombinationCode: refresh ? prevCombinationCode : [],
       refresh: refresh,
+      mode: previewMode,
+      userPhoto: selectedImage,
     );
     selected = recommendation?.items ?? const [];
     generatedImageURL = recommendation?.generatedImageURL ?? '';
@@ -87,7 +109,6 @@ class OutfitController extends ChangeNotifier {
     return recommendation != null;
   }
 
-  /// Jalur 2: pilih sendiri. Satu kategori hanya boleh satu produk.
   void toggleProduct(Product product) {
     if (selected.any((p) => p.id == product.id)) {
       selected = selected.where((p) => p.id != product.id).toList();

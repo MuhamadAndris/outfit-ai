@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:outfit_ai/state/outfit_controller.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../models/product.dart';
 
@@ -47,8 +50,9 @@ class RecommendationService {
   Future<OutfitRecommendation?> recommend({
     required int budget,
     required String prompt,
+    required PreviewMode mode,
+    required File? userPhoto,
     List<String> prevCombinationCode = const [],
-    String mode = 'mannequin',
     bool refresh = false,
   }) async {
     final request = http.MultipartRequest(
@@ -61,7 +65,31 @@ class RecommendationService {
     request.fields['previous_combinations'] = prevCombinationCode.join(',');
     request.fields['refresh'] = refresh.toString();
     request.fields['budget'] = budget.toString();
-    request.fields['mode'] = mode;
+
+    request.fields['mode'] = switch (mode) {
+      PreviewMode.mannequin => 'mannequin',
+      PreviewMode.user_photo => 'user_photo',
+    };
+
+    // Upload gambar jika tersedia
+    if (userPhoto != null) {
+      final extension = userPhoto.path.split('.').last.toLowerCase();
+
+      final mediaType = switch (extension) {
+        'jpg' || 'jpeg' => MediaType('image', 'jpeg'),
+        'png' => MediaType('image', 'png'),
+        'webp' => MediaType('image', 'webp'),
+        _ => throw Exception('Format gambar tidak didukung'),
+      };
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          userPhoto.path,
+          contentType: mediaType,
+        ),
+      );
+    }
 
     // DEBUG: tampilkan request yang akan dikirim
     debugPrint('========== REQUEST BACKEND ==========');
@@ -73,6 +101,16 @@ class RecommendationService {
     request.fields.forEach((key, value) {
       debugPrint('  $key: $value');
     });
+
+    debugPrint('File:');
+    for (var file in request.files) {
+      debugPrint('''
+      Filename: ${file.filename}
+      Extension: ${file.filename?.split('.').last}
+      Content-Type: ${file.contentType}
+      Length: ${file.length}
+      ''');
+    }
 
     debugPrint('=====================================');
 
