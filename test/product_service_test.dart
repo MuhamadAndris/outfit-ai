@@ -91,6 +91,8 @@ void main() {
         );
 
         final recommendation = await service.recommend(
+          userPhoto: null,
+          mode: PreviewMode.mannequin,
           budget: 500000,
           prompt: 'Pakai outfit formal',
         );

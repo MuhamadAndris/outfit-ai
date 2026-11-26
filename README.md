@@ -81,7 +81,7 @@ Pastikan perangkat sudah terinstall:
    Cari IPv4 Address, lalu jalankan:
 
    ```bash
-   flutter run --dart-define=API_BASE_URL=http://10.252.107.104:8000
+   flutter run --dart-define=API_BASE_URL=http://10.216.251.104:8000
    ```
 
    Contoh di atas artinya backend sedang berjalan di komputer dengan IP `10.252.107.104` pada port `8000`. Pastikan HP dan laptop tersambung ke jaringan Wi-Fi yang sama.

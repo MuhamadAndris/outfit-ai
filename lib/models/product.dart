@@ -146,6 +146,6 @@ class Product {
   final ProductCategory category;
   final String categoryName;
   final int price; // dalam rupiah
-  final String? imageUrl; // isi dengan foto produk asli dari katalog
+  final String? imageUrl;
   final String reason;
 }
